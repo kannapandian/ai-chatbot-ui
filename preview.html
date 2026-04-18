@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Cloud Assistant</title>
+  <style>
+    body { font-family: Arial; background: #0f172a; color: white; }
+    #chat { width: 400px; margin: 50px auto; }
+    .msg { margin: 10px 0; padding: 10px; border-radius: 8px; }
+    .user { background: #1e293b; text-align: right; }
+    .bot { background: #334155; text-align: left; }
+    input { width: 80%; padding: 10px; }
+    button { padding: 10px; }
+  </style>
+</head>
+<body>
+
+<div id="chat">
+  <h2>🤖 Cloud AI Assistant</h2>
+  <div id="messages"></div>
+  <input id="input" placeholder="Ask something..." />
+  <button onclick="send()">Send</button>
+</div>
+
+<script>
+async function send() {
+  const input = document.getElementById("input");
+  const msg = input.value;
+
+  addMessage(msg, "user");
+
+  const res = await fetch("https://YOUR_API_ENDPOINT/chat", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({message: msg})
+  });
+
+  const data = await res.json();
+  addMessage(data.reply, "bot");
+
+  input.value = "";
+}
+
+function addMessage(text, cls) {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.innerText = text;
+  document.getElementById("messages").appendChild(div);
+}
+</script>
+
+</body>
+</html>
