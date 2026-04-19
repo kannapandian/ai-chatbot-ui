@@ -1,52 +1,221 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Cloud Assistant</title>
-  <style>
-    body { font-family: Arial; background: #0f172a; color: white; }
-    #chat { width: 400px; margin: 50px auto; }
-    .msg { margin: 10px 0; padding: 10px; border-radius: 8px; }
-    .user { background: #1e293b; text-align: right; }
-    .bot { background: #334155; text-align: left; }
-    input { width: 80%; padding: 10px; }
-    button { padding: 10px; }
-  </style>
+<meta charset="UTF-8">
+<title>AI Chatbot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #0f172a, #020617);
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* HEADER */
+.header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #1e293b;
+  font-size: 18px;
+  font-weight: bold;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header span {
+  font-size: 22px;
+}
+
+/* CHAT AREA */
+.chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* MESSAGE ROW */
+.message-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+/* AVATAR */
+.avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.bot-avatar {
+  background: #1e293b;
+}
+
+.user-avatar {
+  background: #0ea5e9;
+}
+
+/* MESSAGE */
+.message {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+/* BOT */
+.bot {
+  background: #020617;
+  border: 1px solid #1e293b;
+}
+
+/* USER */
+.user {
+  background: #0ea5e9;
+  color: white;
+  margin-left: auto;
+}
+
+/* INPUT BAR */
+.input-container {
+  padding: 15px;
+  border-top: 1px solid #1e293b;
+  background: rgba(2, 6, 23, 0.9);
+}
+
+.input-box {
+  display: flex;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 8px;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  outline: none;
+  padding: 10px;
+}
+
+button {
+  background: #0ea5e9;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #0284c7;
+}
+</style>
+
 </head>
+
 <body>
 
-<div id="chat">
-  <h2>🤖 Cloud AI Assistant</h2>
-  <div id="messages"></div>
-  <input id="input" placeholder="Ask something..." />
-  <button onclick="send()">Send</button>
+<div class="header">
+  <span>🤖</span> AI Assistant
+</div>
+
+<div class="chat-container" id="chatContainer"></div>
+
+<div class="input-container">
+  <div class="input-box">
+    <input id="userInput" placeholder="Ask anything..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
 </div>
 
 <script>
-async function send() {
-  const input = document.getElementById("input");
-  const msg = input.value;
+const API_URL = "https://xidyynlbq5.execute-api.us-east-1.amazonaws.com/chat";
 
-  addMessage(msg, "user");
+function addMessage(text, sender) {
+  const chat = document.getElementById("chatContainer");
 
-  const res = await fetch("https://YOUR_API_ENDPOINT/chat", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({message: msg})
-  });
+  const row = document.createElement("div");
+  row.classList.add("message-row");
 
-  const data = await res.json();
-  addMessage(data.reply, "bot");
+  const avatar = document.createElement("div");
+  avatar.classList.add("avatar");
 
+  if (sender === "bot") {
+    avatar.classList.add("bot-avatar");
+    avatar.innerText = "🤖";
+  } else {
+    avatar.classList.add("user-avatar");
+    avatar.innerText = "👤";
+  }
+
+  const msg = document.createElement("div");
+  msg.classList.add("message", sender);
+  msg.innerText = text;
+
+  if (sender === "user") {
+    row.style.justifyContent = "flex-end";
+    row.appendChild(msg);
+    row.appendChild(avatar);
+  } else {
+    row.appendChild(avatar);
+    row.appendChild(msg);
+  }
+
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendMessage() {
+  const input = document.getElementById("userInput");
+  const message = input.value.trim();
+  if (!message) return;
+
+  addMessage(message, "user");
   input.value = "";
+
+  addMessage("Thinking...", "bot");
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+    const chat = document.getElementById("chatContainer");
+    chat.lastChild.querySelector(".message").innerText = data.reply;
+
+  } catch (e) {
+    const chat = document.getElementById("chatContainer");
+    chat.lastChild.querySelector(".message").innerText = "⚠️ Error connecting.";
+  }
 }
 
-function addMessage(text, cls) {
-  const div = document.createElement("div");
-  div.className = "msg " + cls;
-  div.innerText = text;
-  document.getElementById("messages").appendChild(div);
-}
+document.getElementById("userInput").addEventListener("keypress", function(e){
+  if (e.key === "Enter") sendMessage();
+});
 </script>
 
 </body>
